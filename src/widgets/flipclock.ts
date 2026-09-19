@@ -30,6 +30,7 @@ function updateDigit(digit: FlipDigit, next: string, animated: boolean): void {
 
 	const top = createFace(digit.root, 'widget-flip-top widget-flip-top-flip', current);
 	const bottom = createFace(digit.root, 'widget-flip-bottom widget-flip-bottom-flip', next);
+	top.addEventListener('animationstart', () => digit.top.setText(next));
 	top.addEventListener('animationend', () => top.remove());
 	bottom.addEventListener('animationend', () => {
 		digit.top.setText(next);
