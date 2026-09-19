@@ -18,6 +18,12 @@ function createDigit(parent: HTMLElement, initial: string): FlipDigit {
 	return { root, top, bottom };
 }
 
+function createSeparator(parent: HTMLElement): void {
+	const separator = parent.createDiv({ cls: 'widget-flip-separator' });
+	separator.createSpan({ cls: 'widget-flip-dot' });
+	separator.createSpan({ cls: 'widget-flip-dot' });
+}
+
 function updateDigit(digit: FlipDigit, next: string, animated: boolean): void {
 	if (digit.bottom.textContent === next) return;
 
@@ -50,11 +56,11 @@ const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', descr
 	if (cardColor) root.style.setProperty('--flip-card-color', cardColor);
 	const clock = root.createDiv({ cls: 'widget-flip-clock' });
 	const hours = [createDigit(clock, '0'), createDigit(clock, '0')];
-	clock.createDiv({ cls: 'widget-flip-separator', text: ':' });
+	createSeparator(clock);
 	const minutes = [createDigit(clock, '0'), createDigit(clock, '0')];
 	const showSeconds = params.seconds === true || text(params.seconds, 'false').toLowerCase() === 'true';
 	const seconds = showSeconds ? [createDigit(clock, '0'), createDigit(clock, '0')] : [];
-	if (showSeconds) clock.createDiv({ cls: 'widget-flip-separator', text: ':' });
+	if (showSeconds) createSeparator(clock);
 
 	const update = () => {
 		const now = new Date();
