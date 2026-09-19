@@ -1,7 +1,8 @@
 import { TFile } from 'obsidian';
 import { BUILTIN_QUOTES, QuoteCategory, QuoteItem, QuoteLanguage } from '../data/quotes';
 import { WidgetDefinition } from '../types';
-import { base, readParams, text } from '../utils';
+import { normalizeParams } from '../params';
+import { base, text } from '../utils';
 
 const categories = ['motivation', 'sagesse', 'science', 'littérature', 'humour'] as const;
 const sources = ['builtin', 'file', 'inline'] as const;
@@ -147,7 +148,7 @@ function cssAlign(value: unknown, fallback: string, warning: string[]): string {
 }
 
 const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', description: 'Une citation locale qui change chaque jour.', category: 'Fun', icon: '', defaultCode: '```quote\nmode: daily\nlang: fr\nfont: elegant\nsize: large\nweight: normal\nstyle: italic\nalign: left\ntext-color: normal\nborder-color: accent\nbar-color: accent\nbackground: transparent\nauthor: true\nauthor-style: normal\nauthor-color: muted\n```', async render(source, el, ctx) {
-	const params = readParams(source);
+	const params = normalizeParams(quote, source);
 	const sourceName = text(params.source, 'builtin');
 	const language = text(params.lang, 'fr');
 	const category = text(params.category, 'all');

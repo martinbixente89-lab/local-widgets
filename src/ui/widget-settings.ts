@@ -2,6 +2,7 @@ import { App, EventRef, Modal, Notice, Setting, TFile, parseYaml } from 'obsidia
 import LocalWidgetsPlugin from '../main';
 import { WidgetDefinition, WidgetSettingField } from '../types';
 import { blockBody, findCodeBlocks, removeBlockKey, writeBlockKey } from '../utils/block-text';
+import { normalizeParams } from '../params';
 
 function parseValues(source: string): Record<string, unknown> {
 	try { const parsed = parseYaml(source) as unknown; return parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : {}; } catch { return {}; }
@@ -18,6 +19,7 @@ export class WidgetSettingsModal extends Modal {
 	private readonly controls = new Map<string, { root: HTMLElement; input: HTMLInputElement | HTMLSelectElement; field: WidgetSettingField }>();
 	private codeEl!: HTMLElement;
 	private values: Record<string, unknown> = {};
+	private normalizedValues: Record<string, unknown> = {};
 	private blockSource = '';
 
 	constructor(app: App, private readonly plugin: LocalWidgetsPlugin, private readonly widget: WidgetDefinition, private readonly sourcePath: string, private readonly rank: number, private readonly viewCode: () => void) { super(app); }
@@ -39,6 +41,7 @@ export class WidgetSettingsModal extends Modal {
 		if (!block) { new Notice('Le bloc du widget a été supprimé ou déplacé.'); this.close(); return; }
 		this.blockSource = blockBody(content, block);
 		this.values = parseValues(this.blockSource);
+		this.normalizedValues = normalizeParams(this.widget, this.blockSource);
 		this.codeEl.empty();
 		this.codeEl.createEl('h3', { text: 'Code du bloc' });
 		this.codeEl.createEl('pre', { text: this.blockSource });
@@ -75,7 +78,7 @@ export class WidgetSettingsModal extends Modal {
 		const control = this.controls.get(field.key);
 		if (!control) return;
 		const present = Object.prototype.hasOwnProperty.call(this.values, field.key);
-		const value = valueText(this.values[field.key], field);
+		const value = valueText(Object.prototype.hasOwnProperty.call(this.values, field.key) ? this.values[field.key] : this.normalizedValues[field.key], field);
 		control.root.toggleClass('is-default', !present);
 		control.root.setAttribute('data-default-label', present ? '' : 'Par défaut');
 		if (field.type === 'toggle') (control.input as HTMLInputElement).checked = value === 'true';

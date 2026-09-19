@@ -12,4 +12,6 @@ import weather from './weather';
 import calendar from './calendar';
 import ambient from './ambient';
 import calculator from './calculator';
+import { widgetSettings } from './settings';
 export const allWidgets: WidgetDefinition[] = [countdown, progress, clock, flipclock, quote, pomodoro, embed, habits, moon, weather, calendar, ambient, calculator];
+for (const widget of allWidgets) widget.settings = widgetSettings[widget.id] ?? [];
