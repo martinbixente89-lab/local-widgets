@@ -28,6 +28,8 @@ Les liens Spotify, YouTube (`watch?v=`, `youtu.be`, Shorts) et GIPHY sont conver
 
 Le widget météo utilise Open-Meteo avec un cache local de 30 minutes. Le calendrier génère des liens vers les notes quotidiennes du dossier indiqué. Le widget ambiance lit uniquement les fichiers audio présents dans le vault, et la calculatrice utilise `mathjs` sans évaluer de code JavaScript arbitraire.
 
+Le widget `flipclock` propose les modes `clock`, `timer` et `stopwatch`. Les minuteurs et chronomètres sauvegardent leur état dans les données du plugin et utilisent les paramètres `duration`, `autostart`, `on-finish`, `loop`, `laps` et `id`. Les options d’horloge communes sont `format`, `ampm`, `leading-zero`, `timezone`, `seconds` et `hours`.
+
 ## Citation du jour
 
 Le widget `quote` choisit la même citation pour toute la journée dans toutes les notes, puis change automatiquement à minuit. La sélection `daily` parcourt les citations sans répétition avant la fin d’un cycle.

@@ -1,79 +1,30 @@
 import { WidgetDefinition } from '../types';
 import { base, readParams, text } from '../utils';
+import { formatElapsed, notifyFinish, parseBoolean, parseDuration, stateKey, timeParts, updateEvery } from './time';
 
-interface FlipDigit {
-	root: HTMLElement;
-	top: HTMLElement;
-	bottom: HTMLElement;
-}
+interface FlipDigit { root: HTMLElement; top: HTMLElement; bottom: HTMLElement; }
+interface TimerState { status: 'idle' | 'running' | 'paused' | 'finished'; durationMs: number; endAt?: number; elapsedMs: number; startedAt?: number; laps: number[]; alerted: boolean; }
+function face(parent: HTMLElement, cls: string, value: string): HTMLElement { const element = parent.createDiv({ cls }); element.createSpan({ text: value }); return element; }
+function digit(parent: HTMLElement, initial: string): FlipDigit { const root = parent.createDiv({ cls: 'widget-flip-digit' }); return { root, top: face(root, 'widget-flip-top', initial), bottom: face(root, 'widget-flip-bottom', initial) }; }
+function separator(parent: HTMLElement): void { const element = parent.createDiv({ cls: 'widget-flip-separator' }); element.createSpan({ cls: 'widget-flip-dot' }); element.createSpan({ cls: 'widget-flip-dot' }); }
+function setDigit(item: FlipDigit, value: string, animated: boolean): void { if (item.bottom.textContent?.trim() === value) return; const current = item.bottom.textContent?.trim() ?? value; if (!animated) { item.top.firstElementChild?.setText(value); item.bottom.firstElementChild?.setText(value); return; } const top = face(item.root, 'widget-flip-top widget-flip-top-flip', current); const bottom = face(item.root, 'widget-flip-bottom widget-flip-bottom-flip', value); top.addEventListener('animationstart', () => item.top.firstElementChild?.setText(value)); top.addEventListener('animationend', () => top.remove()); bottom.addEventListener('animationend', () => { item.bottom.firstElementChild?.setText(value); bottom.remove(); }); }
+function display(root: HTMLElement, values: string[], animated: boolean): void { const clock = root.querySelector('.widget-flip-clock'); if (!clock) return; const digits = Array.from(clock.querySelectorAll<HTMLElement>('.widget-flip-digit')); const separators = Array.from(clock.querySelectorAll<HTMLElement>('.widget-flip-separator')); const chars = values.join('').split(''); const start = chars.length === 2 ? 2 : 0; digits.forEach((item, index) => { const visible = index >= start && index < start + chars.length; item.toggleClass('is-hidden', !visible); const value = chars[index - start]; if (visible && value) setDigit({ root: item, top: item.querySelector('.widget-flip-top:not(.widget-flip-top-flip)')!, bottom: item.querySelector('.widget-flip-bottom:not(.widget-flip-bottom-flip)')! }, value, animated); }); separators.forEach((item, index) => item.toggleClass('is-hidden', chars.length < 4 || (chars.length < 6 && index > 0))); }
+function controls(root: HTMLElement, labels: Record<string, string>, handlers: Record<string, () => void>): void { const group = root.createDiv({ cls: 'widget-time-controls' }); for (const [key, label] of Object.entries(labels)) { const button = group.createEl('button', { text: label }); button.addEventListener('click', handlers[key] ?? (() => undefined)); } }
+function timerState(ctx: Parameters<WidgetDefinition['render']>[2], params: Record<string, unknown>, durationMs: number): TimerState { const key = stateKey(ctx, text(params.id, ''), 'flipclock'); const saved = ctx.loadWidgetState?.<TimerState>(key); return saved && saved.durationMs === durationMs ? saved : { status: 'idle', durationMs, elapsedMs: 0, laps: [], alerted: false }; }
 
-function createFace(parent: HTMLElement, cls: string, value: string): HTMLElement {
-	const face = parent.createDiv({ cls });
-	face.createSpan({ text: value });
-	return face;
-}
-
-function createDigit(parent: HTMLElement, initial: string): FlipDigit {
-	const root = parent.createDiv({ cls: 'widget-flip-digit' });
-	const top = createFace(root, 'widget-flip-top', initial);
-	const bottom = createFace(root, 'widget-flip-bottom', initial);
-	return { root, top, bottom };
-}
-
-function createSeparator(parent: HTMLElement): void {
-	const separator = parent.createDiv({ cls: 'widget-flip-separator' });
-	separator.createSpan({ cls: 'widget-flip-dot' });
-	separator.createSpan({ cls: 'widget-flip-dot' });
-}
-
-function updateDigit(digit: FlipDigit, next: string, animated: boolean): void {
-	if (digit.bottom.textContent?.trim() === next) return;
-
-	const current = digit.bottom.textContent?.trim() ?? next;
-	if (!animated) {
-		digit.top.firstElementChild?.setText(next);
-		digit.bottom.firstElementChild?.setText(next);
-		return;
-	}
-
-	const top = createFace(digit.root, 'widget-flip-top widget-flip-top-flip', current);
-	const bottom = createFace(digit.root, 'widget-flip-bottom widget-flip-bottom-flip', next);
-	top.addEventListener('animationstart', () => digit.top.firstElementChild?.setText(next));
-	top.addEventListener('animationend', () => top.remove());
-	bottom.addEventListener('animationend', () => {
-		digit.top.firstElementChild?.setText(next);
-		digit.bottom.firstElementChild?.setText(next);
-		bottom.remove();
-	});
-}
-
-const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', description: 'Une horloge rétro animée.', category: 'Temps', icon: '▣', defaultCode: '```flipclock\ncolor: amber\nsize: large\nmode: flip\n```', render(source, el, ctx) {
-	const params = readParams(source);
-	const root = base(el, params, ctx, 'widget-flipclock');
-	const textColor = text(params.textColor ?? params['text-color'], '');
-	const cardColor = text(params.cardColor ?? params['card-color'], '');
-	const mode = text(params.mode, 'flip').toLowerCase();
-	const animated = mode !== 'static' && mode !== 'simple';
-	if (textColor) root.style.setProperty('--flip-text-color', textColor);
-	if (cardColor) root.style.setProperty('--flip-card-color', cardColor);
-	const clock = root.createDiv({ cls: 'widget-flip-clock' });
-	const hours = [createDigit(clock, '0'), createDigit(clock, '0')];
-	createSeparator(clock);
-	const minutes = [createDigit(clock, '0'), createDigit(clock, '0')];
-	const showSeconds = params.seconds === true || text(params.seconds, 'false').toLowerCase() === 'true';
-	if (showSeconds) createSeparator(clock);
-	const seconds = showSeconds ? [createDigit(clock, '0'), createDigit(clock, '0')] : [];
-
-	const update = () => {
-		const now = new Date();
-		const hour = ctx.settings.timeFormat === '12h' ? (now.getHours() % 12 || 12) : now.getHours();
-		const hoursValue = String(hour).padStart(2, '0');
-		const values = [hoursValue, String(now.getMinutes()).padStart(2, '0')];
-		if (showSeconds) values.push(String(now.getSeconds()).padStart(2, '0'));
-		[hours, minutes, seconds].forEach((digits, index) => digits.forEach((digit, digitIndex) => updateDigit(digit, values[index]?.[digitIndex] ?? '0', animated)));
-	};
-
-	update();
-	ctx.addInterval(update, 1000);
+const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', description: 'Horloge, minuteur ou chronomètre.', category: 'Temps', icon: '▣', defaultCode: '```flipclock\nmode: clock\nformat: 24\nseconds: true\nhours: auto\nsize: medium\n```', render(source, el, ctx) {
+	const params = readParams(source); const root = base(el, params, ctx, 'widget-flipclock'); const mode = text(params.mode, 'clock').toLowerCase(); const showSeconds = parseBoolean(params.seconds, true); const hoursMode = ['auto', 'show', 'hide'].includes(text(params.hours, 'auto')) ? text(params.hours, 'auto') as 'auto' | 'show' | 'hide' : 'auto'; const animated = mode === 'clock';
+	const clock = root.createDiv({ cls: 'widget-flip-clock' }); digit(clock, '0'); digit(clock, '0'); separator(clock); digit(clock, '0'); digit(clock, '0'); if (showSeconds) { separator(clock); digit(clock, '0'); digit(clock, '0'); } const badge = root.createSpan({ cls: 'widget-time-ampm' }); const options = { format: text(params.format, '24') === '12' ? '12' as const : '24' as const, ampm: parseBoolean(params.ampm, true), leadingZero: parseBoolean(params['leading-zero'], true), timezone: text(params.timezone, 'local'), showSeconds, hours: hoursMode };
+	const updateClock = () => { try { const parts = timeParts(new Date(), options); const hour = options.leadingZero || options.format === '24' ? String(parts.hours).padStart(2, '0') : String(parts.hours); display(root, [hour, String(parts.minutes).padStart(2, '0'), ...(showSeconds ? [String(parts.seconds).padStart(2, '0')] : [])], animated); badge.setText(options.format === '12' && options.ampm ? parts.ampm : ''); } catch { badge.setText('Fuseau invalide'); } };
+	if (mode === 'clock' || !['timer', 'stopwatch'].includes(mode)) { updateClock(); ctx.addInterval(updateClock, updateEvery(options)); return; }
+	const duration = mode === 'timer' ? parseDuration(params.duration ?? '00:25:00') : 0; let state = timerState(ctx, params, duration); const key = stateKey(ctx, text(params.id, ''), 'flipclock'); const renderValue = () => { const elapsed = mode === 'timer' ? (state.status === 'running' && state.endAt ? Math.max(0, state.endAt - Date.now()) : state.status === 'finished' ? 0 : state.durationMs - state.elapsedMs) : state.elapsedMs + (state.status === 'running' && state.startedAt ? Date.now() - state.startedAt : 0); display(root, formatElapsed(mode === 'timer' ? elapsed : elapsed, { showSeconds, hours: hoursMode }), false); };
+	const persist = () => ctx.saveWidgetState?.(key, state);
+	const start = () => { if (state.status === 'running') return; if (mode === 'timer') state.endAt = Date.now() + (state.status === 'paused' ? state.elapsedMs : state.durationMs); else state.startedAt = Date.now(); state.status = 'running'; persist(); };
+	const pause = () => { if (state.status !== 'running') return; if (mode === 'timer' && state.endAt) state.elapsedMs = Math.max(0, state.endAt - Date.now()); if (mode === 'stopwatch' && state.startedAt) state.elapsedMs += Date.now() - state.startedAt; state.status = 'paused'; state.startedAt = undefined; state.endAt = undefined; persist(); };
+	const reset = () => { state = { status: 'idle', durationMs: duration, elapsedMs: 0, laps: [], alerted: false }; persist(); renderValue(); };
+	const lap = () => { if (mode === 'stopwatch' && state.status === 'running') { const total = state.elapsedMs + (state.startedAt ? Date.now() - state.startedAt : 0); state.laps.push(total); persist(); renderLaps(); } };
+	const finish = async () => { state.status = 'finished'; state.elapsedMs = 0; state.endAt = undefined; if (!state.alerted) { state.alerted = true; persist(); await notifyFinish(ctx, text(params['on-finish'], 'sound')); } if (parseBoolean(params.loop, false)) { state.alerted = false; start(); } };
+	const renderLaps = () => { const list = root.querySelector('.widget-time-laps'); if (list) list.empty(); const lapTimes = state.laps.map((value, index) => value - (state.laps[index - 1] ?? 0)); const fastest = Math.min(...lapTimes); const slowest = Math.max(...lapTimes); for (const [index, lapValue] of state.laps.entries()) { const lapTime = lapTimes[index] ?? 0; list?.createDiv({ cls: lapTime === fastest ? 'is-fastest' : lapTime === slowest ? 'is-slowest' : '', text: `Tour ${index + 1} · ${formatElapsed(lapTime, { showSeconds: true, hours: 'show' }).join(':')} · total ${formatElapsed(lapValue, { showSeconds: true, hours: 'show' }).join(':')}` }); } };
+	controls(root, mode === 'timer' ? { start: state.status === 'paused' ? 'Reprendre' : 'Démarrer', pause: 'Pause', reset: 'Réinitialiser' } : { start: state.status === 'paused' ? 'Reprendre' : 'Démarrer', pause: 'Pause', reset: 'Réinitialiser', lap: 'Tour' }, { start, pause, reset, lap }); root.createDiv({ cls: 'widget-time-laps' }); renderValue(); renderLaps(); ctx.addInterval(() => { if (mode === 'timer' && state.status === 'running' && state.endAt && state.endAt <= Date.now()) void finish(); renderValue(); }, 250); if (parseBoolean(params.autostart, false) && state.status === 'idle') start();
 } };
 export default flipclock;

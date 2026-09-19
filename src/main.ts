@@ -8,21 +8,30 @@ import { blockRank } from './utils/block-text';
 
 export default class LocalWidgetsPlugin extends Plugin {
 	settings!: LocalWidgetsSettings;
+	private widgetStates: Record<string, unknown> = {};
+	private stateSaveTimer?: number;
 
 	async onload() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<LocalWidgetsSettings>);
+		const data = await this.loadData() as Partial<LocalWidgetsSettings> & { widgetStates?: Record<string, unknown> };
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		this.widgetStates = data.widgetStates ?? {};
+		const expiry = Date.now() - 30 * 86400000;
+		this.widgetStates = Object.fromEntries(Object.entries(this.widgetStates).filter(([, value]) => typeof value === 'object' && value !== null && Number((value as { updatedAt?: unknown }).updatedAt ?? Date.now()) >= expiry));
 		this.addRibbonIcon('layout-dashboard', 'Ouvrir le menu des widgets', () => this.openWidgetMenu());
 		this.addCommand({ id: 'insert-widget', name: 'Insérer un widget', callback: () => this.openWidgetMenu() });
 		this.addSettingTab(new LocalWidgetsTab(this.app, this));
 		for (const widget of allWidgets) {
-			this.registerMarkdownCodeBlockProcessor(widget.id, (source, el, markdownContext) => {
-				const context: WidgetContext = { app: this.app, plugin: this, settings: this.settings, addInterval: (callback, delay) => markdownContext.addChild(new WidgetInterval(el, callback, delay)), addTimeout: (callback, delay) => markdownContext.addChild(new WidgetTimeout(el, callback, delay)), addWindowEvent: (type, callback) => markdownContext.addChild(new WidgetWindowEvent(el, type, callback)), addVaultModify: (callback) => markdownContext.addChild(new WidgetVaultModify(el, this.app, callback)), editBlock: () => this.editBlock(el, markdownContext), openSettings: () => { void this.openWidgetSettings(widget, source, el, markdownContext); } };
+			this.registerMarkdownCodeBlockProcessor(widget.id, async (source, el, markdownContext) => {
+				const file = this.app.vault.getAbstractFileByPath(markdownContext.sourcePath);
+				const section = markdownContext.getSectionInfo(el);
+				const content = file instanceof TFile ? await this.app.vault.cachedRead(file) : '';
+				const context: WidgetContext = { app: this.app, plugin: this, settings: this.settings, sourcePath: markdownContext.sourcePath, blockRank: section ? blockRank(content, widget.id, section.lineStart) : undefined, loadWidgetState: (key) => this.widgetStates[key] as never, saveWidgetState: (key, value) => { this.widgetStates[key] = typeof value === 'object' && value !== null ? { ...value as Record<string, unknown>, updatedAt: Date.now() } : value; if (this.stateSaveTimer !== undefined) window.clearTimeout(this.stateSaveTimer); this.stateSaveTimer = window.setTimeout(() => { void this.saveData({ ...this.settings, widgetStates: this.widgetStates }); }, 300); }, addInterval: (callback, delay) => markdownContext.addChild(new WidgetInterval(el, callback, delay)), addTimeout: (callback, delay) => markdownContext.addChild(new WidgetTimeout(el, callback, delay)), addWindowEvent: (type, callback) => markdownContext.addChild(new WidgetWindowEvent(el, type, callback)), addVaultModify: (callback) => markdownContext.addChild(new WidgetVaultModify(el, this.app, callback)), editBlock: () => this.editBlock(el, markdownContext), openSettings: () => { void this.openWidgetSettings(widget, source, el, markdownContext); } };
 				try { Promise.resolve(widget.render(source, el, context)).catch((error: unknown) => { el.empty(); el.createDiv({ cls: 'local-widgets-error', text: `Impossible d'afficher ce widget : ${String(error)}` }); }); } catch (error) { el.empty(); el.createDiv({ cls: 'local-widgets-error', text: `Impossible d'afficher ce widget : ${String(error)}` }); }
 			});
 		}
 	}
 
-	async saveSettings(): Promise<void> { await this.saveData(this.settings); }
+	async saveSettings(): Promise<void> { await this.saveData({ ...this.settings, widgetStates: this.widgetStates }); }
 	private openWidgetMenu(): void { new WidgetMenuModal(this.app, this, (code) => this.insertWidget(code)).open(); }
 	private async openWidgetSettings(widget: WidgetDefinition, source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
 		const sectionInfo = ctx.getSectionInfo(el);

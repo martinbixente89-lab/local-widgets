@@ -23,6 +23,14 @@
 .widget-flip-dot { background: currentColor; border-radius: 50%; display: block; height: clamp(8px, 2.2cqw, 20px); left: 50%; position: absolute; transform: translateX(-50%); width: clamp(8px, 2.2cqw, 20px); }
 .widget-flip-dot:first-child { top: 35%; }
 .widget-flip-dot:last-child { top: 65%; }
+.widget-flip-clock .is-hidden { display: none; }
+.widget-time-value { color: var(--flip-text-color, var(--widget-accent)); font-variant-numeric: tabular-nums; font-size: clamp(2.5rem, 10vw, 6rem); font-weight: 700; text-align: center; }
+.widget-time-ampm { color: var(--flip-text-color, var(--widget-accent)); font-size: .8em; margin-inline-start: .35em; vertical-align: baseline; }
+.widget-time-controls { display: flex; flex-wrap: wrap; gap: .5em; justify-content: center; margin-top: .8em; }
+.widget-time-controls button { cursor: pointer; }
+.widget-time-laps { color: var(--text-muted); font-variant-numeric: tabular-nums; margin: .8em auto 0; max-width: 28em; text-align: center; }
+.widget-time-laps .is-fastest { color: var(--text-success); font-weight: 700; }
+.widget-time-laps .is-slowest { color: var(--text-error); font-weight: 700; }
 @keyframes widget-flip-top { to { transform: rotateX(90deg); } }
 @keyframes widget-flip-bottom { to { transform: rotateX(0); } }
 .widget-progress-track { background: var(--background-modifier-border); border-radius: 99px; height: 10px; margin-top: .9em; overflow: hidden; } .widget-progress-bar { background: var(--widget-accent); border-radius: inherit; height: 100%; transition: width .4s ease; } .widget-progress-meta { color: var(--text-muted); font-size: .8em; margin-top: .35em; text-align: right; }

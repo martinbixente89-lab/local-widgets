@@ -89,7 +89,7 @@ export class WidgetSettingsModal extends Modal {
 	private refreshControls(): void { for (const field of this.widget.settings ?? []) { if (!this.isFocused(field.key)) this.setControl(field); } }
 	private isFocused(key: string): boolean { return document.activeElement === this.controls.get(key)?.input; }
 	private debouncedChange(field: WidgetSettingField, value: string): void { if (this.saveTimer !== undefined) window.clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.change(field, value), 300); }
-	private change(field: WidgetSettingField, value: unknown): void { if (String(this.values[field.key] ?? field.default) === String(value) && Object.prototype.hasOwnProperty.call(this.values, field.key)) return; this.queued = { key: field.key, value, remove: false }; void this.flushWrite(); }
+	private change(field: WidgetSettingField, value: unknown): void { if (this.widget.id === 'flipclock' && field.key === 'mode' && (value === 'timer' || value === 'stopwatch') && !Object.prototype.hasOwnProperty.call(this.values, 'id')) { this.queued = { key: 'id', value: `minuteur-${Date.now()}`, remove: false }; void this.flushWrite(); } if (String(this.values[field.key] ?? field.default) === String(value) && Object.prototype.hasOwnProperty.call(this.values, field.key)) return; this.queued = { key: field.key, value, remove: false }; void this.flushWrite(); }
 	private async reset(field: WidgetSettingField): Promise<void> { this.queued = { key: field.key, value: undefined, remove: true }; await this.flushWrite(); }
 
 	private async flushWrite(): Promise<void> {
