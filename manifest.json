@@ -1,7 +1,7 @@
 {
 	"id": "local-widgets",
 	"name": "Local Widgets",
-	"version": "1.1.9",
+	"version": "1.1.10",
 	"minAppVersion": "1.13.0",
 	"description": "Un menu de widgets esthétiques, locaux et configurables dans vos notes.",
 	"author": "Obsidian",
