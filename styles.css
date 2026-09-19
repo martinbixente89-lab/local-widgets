@@ -5,8 +5,8 @@
 .local-widget[data-size="small"] { font-size: .85em; } .local-widget[data-size="large"] { font-size: 1.25em; }
 .widget-label { color: var(--text-muted); font-size: .85em; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; } .widget-countdown-value, .widget-clock-value, .widget-flip-value, .widget-pomodoro-time { color: var(--widget-accent); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: .04em; }
 .widget-countdown-value { font-size: 2em; margin-top: .25em; } .widget-clock-value { font-size: 2.6em; margin: .12em 0; }
-.widget-flip-clock { align-items: center; display: flex; gap: .18em; justify-content: center; margin: .4em 0 .1em; }
-.widget-flip-digit { color: var(--flip-text-color, var(--widget-accent)); display: inline-flex; flex-direction: column; font-size: clamp(3.4rem, 12vw, 7rem); font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1; min-width: .72em; perspective: 12em; position: relative; }
+.widget-flip-clock { align-items: center; display: flex; gap: .2em; justify-content: center; margin: .4em auto .1em; width: 100%; }
+.widget-flip-digit { color: var(--flip-text-color, var(--widget-accent)); display: inline-flex; flex-direction: column; font-size: clamp(4rem, 14vw, 9rem); font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1; min-width: .72em; perspective: 12em; position: relative; }
 .widget-flip-top, .widget-flip-bottom { background: color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 12%, var(--background-primary)); box-sizing: border-box; height: .45em; justify-content: center; line-height: .5; overflow: hidden; padding: .25em 0 .15em; text-align: center; width: 100%; }
 .widget-flip-top { border-bottom: 1px solid color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 25%, transparent); border-radius: .1em .1em 0 0; display: flex; }
 .widget-flip-bottom { align-items: flex-end; border-radius: 0 0 .1em .1em; display: flex; }

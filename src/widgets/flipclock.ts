@@ -59,8 +59,8 @@ const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', descr
 	createSeparator(clock);
 	const minutes = [createDigit(clock, '0'), createDigit(clock, '0')];
 	const showSeconds = params.seconds === true || text(params.seconds, 'false').toLowerCase() === 'true';
-	const seconds = showSeconds ? [createDigit(clock, '0'), createDigit(clock, '0')] : [];
 	if (showSeconds) createSeparator(clock);
+	const seconds = showSeconds ? [createDigit(clock, '0'), createDigit(clock, '0')] : [];
 
 	const update = () => {
 		const now = new Date();
