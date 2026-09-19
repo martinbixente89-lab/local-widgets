@@ -1,0 +1,15 @@
+import { WidgetDefinition } from '../types';
+import countdown from './countdown';
+import progress from './progress';
+import clock from './clock';
+import flipclock from './flipclock';
+import quote from './quote';
+import pomodoro from './pomodoro';
+import embed from './embed';
+import habits from './habits';
+import moon from './moon';
+import weather from './weather';
+import calendar from './calendar';
+import ambient from './ambient';
+import calculator from './calculator';
+export const allWidgets: WidgetDefinition[] = [countdown, progress, clock, flipclock, quote, pomodoro, embed, habits, moon, weather, calendar, ambient, calculator];

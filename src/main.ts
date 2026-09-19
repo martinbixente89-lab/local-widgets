@@ -1,114 +1,46 @@
-import {
-	Editor,
-	MarkdownView,
-	MarkdownFileInfo,
-	Modal,
-	Notice,
-	Plugin,
-} from 'obsidian';
-import {
-	DEFAULT_SETTINGS,
-	MyPluginSettings,
-	SampleSettingTab,
-} from './settings';
+import { Editor, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownView, Plugin } from 'obsidian';
+import { DEFAULT_SETTINGS, LocalWidgetsSettings, LocalWidgetsTab } from './settings';
+import { WidgetMenuModal } from './ui/widget-menu';
+import { allWidgets } from './widgets';
+import { WidgetContext } from './types';
 
-// Remember to rename these classes and interfaces!
-
-export default class MyPlugin extends Plugin {
-	settings!: MyPluginSettings;
+export default class LocalWidgetsPlugin extends Plugin {
+	settings!: LocalWidgetsSettings;
 
 	async onload() {
-		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (_evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			},
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (
-				editor: Editor,
-				_ctx: MarkdownView | MarkdownFileInfo,
-			) => {
-				editor.replaceSelection('Sample editor command');
-			},
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			},
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(activeDocument, 'click', (_evt: MouseEvent) => {
-			new Notice('Click');
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(
-			window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000),
-		);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<LocalWidgetsSettings>);
+		this.addRibbonIcon('layout-dashboard', 'Ouvrir le menu des widgets', () => this.openWidgetMenu());
+		this.addCommand({ id: 'insert-widget', name: 'Insérer un widget', callback: () => this.openWidgetMenu() });
+		this.addSettingTab(new LocalWidgetsTab(this.app, this));
+		for (const widget of allWidgets) {
+			this.registerMarkdownCodeBlockProcessor(widget.id, (source, el, markdownContext) => {
+				const context: WidgetContext = { app: this.app, plugin: this, settings: this.settings, addInterval: (callback, delay) => markdownContext.addChild(new WidgetInterval(el, callback, delay)), editBlock: () => this.editBlock(el, markdownContext) };
+				try { Promise.resolve(widget.render(source, el, context)).catch((error: unknown) => { el.empty(); el.createDiv({ cls: 'local-widgets-error', text: `Impossible d'afficher ce widget : ${String(error)}` }); }); } catch (error) { el.empty(); el.createDiv({ cls: 'local-widgets-error', text: `Impossible d'afficher ce widget : ${String(error)}` }); }
+			});
+		}
 	}
 
-	onunload() {}
-
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<MyPluginSettings>,
-		);
+	async saveSettings(): Promise<void> { await this.saveData(this.settings); }
+	private openWidgetMenu(): void { new WidgetMenuModal(this.app, this, (code) => this.insertWidget(code)).open(); }
+	private insertWidget(code: string): void {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view) return;
+		const editor: Editor = view.editor;
+		const selection = editor.getSelection();
+		editor.replaceSelection(`${selection ? `${selection}\n` : ''}${code}\n`);
 	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
+	private editBlock(el: HTMLElement, ctx: MarkdownPostProcessorContext): void {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const section = ctx.getSectionInfo(el);
+		if (!view || !section || view.file?.path !== ctx.sourcePath) return;
+		view.editor.setCursor({ line: section.lineStart, ch: 0 });
+		view.editor.scrollIntoView({ from: { line: section.lineStart, ch: 0 }, to: { line: section.lineEnd, ch: 0 } }, true);
 	}
 }
 
-class SampleModal extends Modal {
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
+class WidgetInterval extends MarkdownRenderChild {
+	private intervalId?: number;
+	constructor(containerEl: HTMLElement, private readonly callback: () => void, private readonly delay: number) { super(containerEl); }
+	onload(): void { this.intervalId = window.setInterval(this.callback, this.delay); }
+	onunload(): void { if (this.intervalId !== undefined) window.clearInterval(this.intervalId); }
 }

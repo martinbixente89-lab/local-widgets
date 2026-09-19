@@ -1,0 +1,8 @@
+import { evaluate } from 'mathjs';
+import { WidgetDefinition } from '../types';
+import { base, readParams } from '../utils';
+
+const calculator: WidgetDefinition = { id: 'calculator', name: 'Calculatrice', description: 'Calculatrice scientifique locale.', category: 'Utilitaires', icon: '∑', defaultCode: '```calculator\ncolor: amber\nsize: medium\n```', render(source, el, ctx) {
+	const params = readParams(source); const root = base(el, params, ctx, 'widget-calculator'); const display = root.createEl('input', { cls: 'widget-calculator-display', attr: { type: 'text', inputmode: 'decimal', placeholder: 'Sin(pi / 2) + 2^3' } }); const result = root.createDiv({ cls: 'widget-calculator-result' }); const keys = root.createDiv({ cls: 'widget-calculator-keys' }); const buttons = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '(', ')', 'sin(', 'cos(', 'sqrt(', '+', 'C', '=']; for (const key of buttons) { const button = keys.createEl('button', { text: key }); button.addEventListener('click', () => { if (key === 'C') { display.value = ''; result.setText(''); } else if (key === '=') { try { result.setText(String(evaluate(display.value))); } catch { result.setText('Expression invalide'); } } else { display.value += key; display.focus(); } }); } display.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); try { result.setText(String(evaluate(display.value))); } catch { result.setText('Expression invalide'); } } }); void ctx;
+} };
+export default calculator;

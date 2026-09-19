@@ -1,0 +1,6 @@
+import { WidgetDefinition } from '../types';
+import { base, icon, readParams, text } from '../utils';
+
+const quotes = [['La simplicité est la sophistication suprême.', 'Leonardo da Vinci'], ['Le commencement est la moitié de toute action.', 'Platon'], ['Ce qui compte, ce n’est pas ce que l’on regarde, mais ce que l’on voit.', 'Henry David Thoreau'], ['Fais de chaque jour ton chef-d’œuvre.', 'John Wooden']];
+const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', description: 'Une citation locale qui change chaque jour.', category: 'Fun', icon: '❝', defaultCode: '```quote\ncolor: pink\nicon: ❝\n```', render(source, el, ctx) { const params = readParams(source); const root = base(el, params, ctx, 'widget-quote'); const item = quotes[Math.floor(Date.now() / 86400000) % quotes.length] ?? ['Le moment présent est le meilleur point de départ.', 'Anonyme']; root.createDiv({ cls: 'widget-quote-mark', text: icon(params, '❝') }); root.createEl('blockquote', { text: item[0] }); root.createDiv({ cls: 'widget-quote-author', text: `— ${text(item[1], 'Anonyme')}` }); } };
+export default quote;

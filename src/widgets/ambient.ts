@@ -1,0 +1,8 @@
+import { WidgetDefinition } from '../types';
+import { base, readParams, text } from '../utils';
+
+const ambient: WidgetDefinition = { id: 'ambient', name: 'Ambiance', description: 'Mixez des fichiers audio du vault.', category: 'Média', icon: '♫', defaultCode: '```ambient\nfolder: Audio/Ambient\ncolor: purple\n```', render(source, el, ctx) {
+	const params = readParams(source); const root = base(el, params, ctx, 'widget-ambient'); const folder = text(params.folder, 'Audio/Ambient').replace(/^\//, ''); const files = ctx.app.vault.getFiles().filter((file) => file.path.startsWith(`${folder}/`) && /\.(mp3|wav|ogg|m4a|flac)$/i.test(file.extension)); if (!files.length) { root.createDiv({ cls: 'local-widgets-error', text: `Aucun fichier audio trouvé dans ${folder}.` }); return; }
+	const mixer = root.createDiv({ cls: 'widget-ambient-mixer' }); for (const file of files.slice(0, 8)) { const row = mixer.createDiv({ cls: 'widget-ambient-row' }); const audio = row.createEl('audio', { attr: { src: ctx.app.vault.getResourcePath(file), loop: 'true' } }); audio.volume = 0.35; const play = row.createEl('button', { text: '▶' }); row.createSpan({ text: file.basename }); const volume = row.createEl('input', { type: 'range', attr: { min: '0', max: '1', step: '0.05', value: '0.35', 'aria-label': `Volume ${file.basename}` } }); play.addEventListener('click', () => { if (audio.paused) { void audio.play(); play.setText('Ⅱ'); } else { audio.pause(); play.setText('▶'); } }); volume.addEventListener('input', () => { audio.volume = Number(volume.value); }); }
+} };
+export default ambient;

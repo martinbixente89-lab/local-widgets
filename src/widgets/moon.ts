@@ -1,0 +1,5 @@
+import { WidgetDefinition } from '../types';
+import { base, readParams, text } from '../utils';
+
+const moon: WidgetDefinition = { id: 'moon', name: 'Phase de lune', description: 'La phase lunaire du jour, calculée hors ligne.', category: 'Nature', icon: '☾', defaultCode: '```moon\nlabel: Lune ce soir\ncolor: purple\n```', render(source, el, ctx) { const params = readParams(source); const root = base(el, params, ctx, 'widget-moon'); const days = (Date.now() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000; const phase = ((days / 29.530588853) % 1 + 1) % 1; const index = Math.floor(phase * 8 + 0.5) % 8; const phases = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘']; const names = ['Nouvelle lune', 'Premier croissant', 'Premier quartier', 'Gibbeuse croissante', 'Pleine lune', 'Gibbeuse décroissante', 'Dernier quartier', 'Dernier croissant']; root.createDiv({ cls: 'widget-moon-icon', text: phases[index] ?? '🌑' }); root.createDiv({ cls: 'widget-label', text: text(params.label, names[index] ?? 'Phase lunaire') }); } };
+export default moon;
