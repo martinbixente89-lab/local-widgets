@@ -1,8 +1,9 @@
 import { App, Editor, EventRef, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownView, Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, LocalWidgetsSettings, LocalWidgetsTab } from './settings';
 import { WidgetMenuModal } from './ui/widget-menu';
+import { WidgetSettingsModal } from './ui/widget-settings';
 import { allWidgets } from './widgets';
-import { WidgetContext } from './types';
+import { WidgetContext, WidgetDefinition } from './types';
 
 export default class LocalWidgetsPlugin extends Plugin {
 	settings!: LocalWidgetsSettings;
@@ -14,7 +15,7 @@ export default class LocalWidgetsPlugin extends Plugin {
 		this.addSettingTab(new LocalWidgetsTab(this.app, this));
 		for (const widget of allWidgets) {
 			this.registerMarkdownCodeBlockProcessor(widget.id, (source, el, markdownContext) => {
-				const context: WidgetContext = { app: this.app, plugin: this, settings: this.settings, addInterval: (callback, delay) => markdownContext.addChild(new WidgetInterval(el, callback, delay)), addTimeout: (callback, delay) => markdownContext.addChild(new WidgetTimeout(el, callback, delay)), addWindowEvent: (type, callback) => markdownContext.addChild(new WidgetWindowEvent(el, type, callback)), addVaultModify: (callback) => markdownContext.addChild(new WidgetVaultModify(el, this.app, callback)), editBlock: () => this.editBlock(el, markdownContext) };
+				const context: WidgetContext = { app: this.app, plugin: this, settings: this.settings, addInterval: (callback, delay) => markdownContext.addChild(new WidgetInterval(el, callback, delay)), addTimeout: (callback, delay) => markdownContext.addChild(new WidgetTimeout(el, callback, delay)), addWindowEvent: (type, callback) => markdownContext.addChild(new WidgetWindowEvent(el, type, callback)), addVaultModify: (callback) => markdownContext.addChild(new WidgetVaultModify(el, this.app, callback)), editBlock: () => this.editBlock(el, markdownContext), openSettings: () => this.openWidgetSettings(widget, source, el, markdownContext) };
 				try { Promise.resolve(widget.render(source, el, context)).catch((error: unknown) => { el.empty(); el.createDiv({ cls: 'local-widgets-error', text: `Impossible d'afficher ce widget : ${String(error)}` }); }); } catch (error) { el.empty(); el.createDiv({ cls: 'local-widgets-error', text: `Impossible d'afficher ce widget : ${String(error)}` }); }
 			});
 		}
@@ -22,6 +23,11 @@ export default class LocalWidgetsPlugin extends Plugin {
 
 	async saveSettings(): Promise<void> { await this.saveData(this.settings); }
 	private openWidgetMenu(): void { new WidgetMenuModal(this.app, this, (code) => this.insertWidget(code)).open(); }
+	private openWidgetSettings(widget: WidgetDefinition, source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): void {
+		const sectionInfo = ctx.getSectionInfo(el);
+		if (!sectionInfo) return;
+		new WidgetSettingsModal(this.app, this, widget, source, ctx.sourcePath, sectionInfo, () => this.editBlock(el, ctx)).open();
+	}
 	private insertWidget(code: string): void {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) return;
