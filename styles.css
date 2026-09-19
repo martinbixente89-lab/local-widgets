@@ -6,9 +6,8 @@
 .widget-countdown-value { font-size: 2em; margin-top: .25em; } .widget-clock-value { font-size: 2.6em; margin: .12em 0; }
 .widget-flip-clock { align-items: center; display: flex; gap: .18em; justify-content: center; margin: .4em 0 .1em; }
 .widget-flip-digit { background: var(--background-primary); border-radius: .12em; color: var(--flip-text-color, var(--widget-accent)); font-size: clamp(2.2rem, 8vw, 4.5rem); font-variant-numeric: tabular-nums; font-weight: 700; height: 1.15em; line-height: 1; min-width: .72em; overflow: hidden; position: relative; perspective: 12em; }
-.widget-flip-top, .widget-flip-bottom { align-items: flex-start; background: color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 12%, var(--background-primary)); display: flex; height: 50%; justify-content: center; left: 0; overflow: hidden; position: absolute; width: 100%; }
-.widget-flip-top > span, .widget-flip-bottom > span { display: block; height: 1.15em; line-height: 1.15em; }
-.widget-flip-bottom > span { transform: translateY(-50%); }
+.widget-flip-top, .widget-flip-bottom { background: color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 12%, var(--background-primary)); box-sizing: border-box; display: flex; height: 50%; justify-content: center; left: 0; line-height: .5; overflow: hidden; padding: .14em 0 .06em; position: absolute; width: 100%; }
+.widget-flip-top { align-items: center; }
 .widget-flip-top { border-bottom: 1px solid color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 25%, transparent); top: 0; }
 .widget-flip-bottom { align-items: flex-end; bottom: 0; }
 .widget-flip-top-flip, .widget-flip-bottom-flip { backface-visibility: hidden; z-index: 2; }

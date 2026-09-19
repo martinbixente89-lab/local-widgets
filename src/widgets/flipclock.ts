@@ -8,9 +8,7 @@ interface FlipDigit {
 }
 
 function createFace(parent: HTMLElement, cls: string, value: string): HTMLElement {
-	const face = parent.createDiv({ cls });
-	face.createSpan({ text: value });
-	return face;
+	return parent.createDiv({ cls, text: value });
 }
 
 function createDigit(parent: HTMLElement, initial: string): FlipDigit {
@@ -28,8 +26,8 @@ function updateDigit(digit: FlipDigit, next: string): void {
 	const bottom = createFace(digit.root, 'widget-flip-bottom widget-flip-bottom-flip', next);
 	top.addEventListener('animationend', () => top.remove());
 	bottom.addEventListener('animationend', () => {
-		digit.top.firstElementChild?.setText(next);
-		digit.bottom.firstElementChild?.setText(next);
+		digit.top.setText(next);
+		digit.bottom.setText(next);
 		bottom.remove();
 	});
 }
