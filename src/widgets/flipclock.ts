@@ -18,10 +18,16 @@ function createDigit(parent: HTMLElement, initial: string): FlipDigit {
 	return { root, top, bottom };
 }
 
-function updateDigit(digit: FlipDigit, next: string): void {
+function updateDigit(digit: FlipDigit, next: string, animated: boolean): void {
 	if (digit.bottom.textContent === next) return;
 
 	const current = digit.bottom.textContent ?? next;
+	if (!animated) {
+		digit.top.setText(next);
+		digit.bottom.setText(next);
+		return;
+	}
+
 	const top = createFace(digit.root, 'widget-flip-top widget-flip-top-flip', current);
 	const bottom = createFace(digit.root, 'widget-flip-bottom widget-flip-bottom-flip', next);
 	top.addEventListener('animationend', () => top.remove());
@@ -32,11 +38,13 @@ function updateDigit(digit: FlipDigit, next: string): void {
 	});
 }
 
-const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', description: 'Une horloge rétro animée.', category: 'Temps', icon: '▣', defaultCode: '```flipclock\ncolor: amber\nsize: large\n```', render(source, el, ctx) {
+const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', description: 'Une horloge rétro animée.', category: 'Temps', icon: '▣', defaultCode: '```flipclock\ncolor: amber\nsize: large\nmode: flip\n```', render(source, el, ctx) {
 	const params = readParams(source);
 	const root = base(el, params, ctx, 'widget-flipclock');
 	const textColor = text(params.textColor ?? params['text-color'], '');
 	const cardColor = text(params.cardColor ?? params['card-color'], '');
+	const mode = text(params.mode, 'flip').toLowerCase();
+	const animated = mode !== 'static' && mode !== 'simple';
 	if (textColor) root.style.setProperty('--flip-text-color', textColor);
 	if (cardColor) root.style.setProperty('--flip-card-color', cardColor);
 	const clock = root.createDiv({ cls: 'widget-flip-clock' });
@@ -53,7 +61,7 @@ const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', descr
 		const hoursValue = String(hour).padStart(2, '0');
 		const values = [hoursValue, String(now.getMinutes()).padStart(2, '0')];
 		if (showSeconds) values.push(String(now.getSeconds()).padStart(2, '0'));
-		[hours, minutes, seconds].forEach((digits, index) => digits.forEach((digit, digitIndex) => updateDigit(digit, values[index]?.[digitIndex] ?? '0')));
+		[hours, minutes, seconds].forEach((digits, index) => digits.forEach((digit, digitIndex) => updateDigit(digit, values[index]?.[digitIndex] ?? '0', animated)));
 	};
 
 	update();

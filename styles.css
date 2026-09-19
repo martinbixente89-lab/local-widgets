@@ -1,18 +1,18 @@
 .local-widget { --widget-accent: var(--interactive-accent); background: linear-gradient(135deg, color-mix(in srgb, var(--widget-accent) 15%, var(--background-primary)), var(--background-secondary)); border: 1px solid color-mix(in srgb, var(--widget-accent) 35%, var(--background-modifier-border)); border-radius: 14px; color: var(--text-normal); margin: 1em 0; max-width: 620px; overflow: hidden; padding: 1.2em 1.4em; position: relative; }
+.local-widget.widget-flipclock { background: transparent; border: 0; border-radius: 0; box-shadow: none; max-width: none; overflow: visible; padding: 0; }
 .local-widget-edit { background: transparent; border: 0; color: var(--text-muted); cursor: pointer; opacity: 0; padding: .2em .4em; position: absolute; right: .65em; top: .65em; transition: opacity .15s, color .15s; } .local-widget:hover .local-widget-edit, .local-widget-edit:focus-visible { opacity: 1; } .local-widget-edit:hover { color: var(--widget-accent); }
 .local-widget-blue { --widget-accent: #4f8cff; } .local-widget-green { --widget-accent: #39a96b; } .local-widget-amber { --widget-accent: #d89227; } .local-widget-pink { --widget-accent: #d95b83; } .local-widget-purple { --widget-accent: #9b78d4; } .local-widget-red { --widget-accent: #d85d5d; }
 .local-widget[data-size="small"] { font-size: .85em; } .local-widget[data-size="large"] { font-size: 1.25em; }
 .widget-label { color: var(--text-muted); font-size: .85em; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; } .widget-countdown-value, .widget-clock-value, .widget-flip-value, .widget-pomodoro-time { color: var(--widget-accent); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: .04em; }
 .widget-countdown-value { font-size: 2em; margin-top: .25em; } .widget-clock-value { font-size: 2.6em; margin: .12em 0; }
 .widget-flip-clock { align-items: center; display: flex; gap: .18em; justify-content: center; margin: .4em 0 .1em; }
-.widget-flip-digit { background: var(--background-primary); border-radius: .12em; color: var(--flip-text-color, var(--widget-accent)); font-size: clamp(2.2rem, 8vw, 4.5rem); font-variant-numeric: tabular-nums; font-weight: 700; height: 1.15em; line-height: 1; min-width: .72em; overflow: hidden; position: relative; perspective: 12em; }
-.widget-flip-top, .widget-flip-bottom { background: color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 12%, var(--background-primary)); box-sizing: border-box; display: flex; height: 50%; justify-content: center; left: 0; line-height: .5; overflow: hidden; padding: .14em 0 .06em; position: absolute; width: 100%; }
-.widget-flip-top { align-items: center; }
-.widget-flip-top { border-bottom: 1px solid color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 25%, transparent); top: 0; }
-.widget-flip-bottom { align-items: flex-end; bottom: 0; }
+.widget-flip-digit { color: var(--flip-text-color, var(--widget-accent)); display: inline-flex; flex-direction: column; font-size: clamp(2.2rem, 8vw, 4.5rem); font-variant-numeric: tabular-nums; font-weight: 700; line-height: 1; min-width: .72em; perspective: 12em; position: relative; }
+.widget-flip-top, .widget-flip-bottom { background: color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 12%, var(--background-primary)); box-sizing: border-box; height: .45em; justify-content: center; line-height: .5; overflow: hidden; padding: .25em 0 .15em; text-align: center; width: 100%; }
+.widget-flip-top { border-bottom: 1px solid color-mix(in srgb, var(--flip-card-color, var(--widget-accent)) 25%, transparent); border-radius: .1em .1em 0 0; display: flex; }
+.widget-flip-bottom { align-items: flex-end; border-radius: 0 0 .1em .1em; display: flex; }
 .widget-flip-top-flip, .widget-flip-bottom-flip { backface-visibility: hidden; z-index: 2; }
-.widget-flip-top-flip { animation: widget-flip-top .35s ease-in forwards; transform-origin: bottom; }
-.widget-flip-bottom-flip { animation: widget-flip-bottom .35s ease-out .35s forwards; transform: rotateX(90deg); transform-origin: top; }
+.widget-flip-top-flip { animation: widget-flip-top .35s ease-in forwards; position: absolute; top: 0; transform-origin: bottom; }
+.widget-flip-bottom-flip { animation: widget-flip-bottom .35s ease-out .35s forwards; bottom: 0; position: absolute; transform: rotateX(90deg); transform-origin: top; }
 .widget-flip-separator { color: var(--flip-text-color, var(--widget-accent)); font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
 @keyframes widget-flip-top { to { transform: rotateX(90deg); } }
 @keyframes widget-flip-bottom { to { transform: rotateX(0); } }
