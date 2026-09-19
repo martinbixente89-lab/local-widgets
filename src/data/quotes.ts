@@ -38,7 +38,7 @@ export const BUILTIN_QUOTES: QuoteItem[] = [
 	{ text: 'On ne se baigne jamais deux fois dans le même fleuve.', author: 'Héraclite', lang: 'fr', category: 'sagesse' },
 	{ text: 'La patience est amère, mais son fruit est doux.', author: 'Aristote', lang: 'fr', category: 'sagesse' },
 	{ text: 'Le plus grand obstacle à la vie est l’attente qui espère demain.', author: 'Sénèque', lang: 'fr', category: 'sagesse' },
-	{ text: 'Ce qui ne peut être évité, il faut l’embrasser.', author: 'William Shakespeare', lang: 'fr', category: 'sagesse' },
+	{ text: 'Ce qui ne peut être évité, il faut l’embrasser.', author: 'Anonyme', lang: 'fr', category: 'sagesse' },
 	{ text: 'The unexamined life is not worth living.', author: 'Socrates', lang: 'en', category: 'sagesse' },
 	{ text: 'The beginning is the most important part of the work.', author: 'Plato', lang: 'en', category: 'sagesse' },
 	{ text: 'Knowing yourself is the beginning of all wisdom.', author: 'Aristotle', lang: 'en', category: 'sagesse' },

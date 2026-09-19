@@ -1,7 +1,7 @@
 import { TFile } from 'obsidian';
 import { BUILTIN_QUOTES, QuoteCategory, QuoteItem, QuoteLanguage } from '../data/quotes';
 import { WidgetDefinition } from '../types';
-import { base, icon, readParams, text } from '../utils';
+import { base, readParams, text } from '../utils';
 
 const categories = ['motivation', 'sagesse', 'science', 'littérature', 'humour'] as const;
 const sources = ['builtin', 'file', 'inline'] as const;
@@ -96,7 +96,57 @@ function nextMidnightDelay(): number {
 	return Math.max(1000, next.getTime() - now.getTime());
 }
 
-const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', description: 'Une citation locale qui change chaque jour.', category: 'Fun', icon: '❝', defaultCode: '```quote\nsource: builtin\nlang: fr\ncategory: all\nmode: daily\nauthor: true\ncolor: pink\nicon: 💬\nsize: medium\n```', async render(source, el, ctx) {
+function cssColor(value: unknown, fallback: string, warning: string[]): string {
+	const raw = text(value, fallback);
+	const aliases: Record<string, string> = { accent: 'var(--interactive-accent)', muted: 'var(--text-muted)', normal: 'var(--text-normal)' };
+	if (aliases[raw]) return aliases[raw];
+	if (typeof CSS !== 'undefined' && CSS.supports('color', raw)) return raw;
+	warning.push(`Couleur invalide : ${raw}`);
+	return fallback;
+}
+
+function cssSize(value: unknown, fallback: string, warning: string[]): string {
+	const raw = text(value, fallback);
+	const presets: Record<string, string> = { small: '.95em', medium: '1.15em', large: '1.35em' };
+	if (presets[raw]) return presets[raw];
+	if (typeof CSS !== 'undefined' && CSS.supports('font-size', raw)) return raw;
+	warning.push(`Taille invalide : ${raw}`);
+	return fallback;
+}
+
+function fontFamily(value: unknown, fallback: string, warning: string[]): string {
+	const raw = text(value, fallback);
+	const presets: Record<string, string> = {
+		serif: 'Georgia, var(--font-text)', sans: 'var(--font-text)', mono: 'var(--font-monospace)', elegant: 'Palatino, Georgia, serif', handwriting: '"Segoe Print", "Bradley Hand", cursive',
+	};
+	if (presets[raw]) return presets[raw];
+	if (/^[\w -]{1,80}$/.test(raw)) return `'${raw.replaceAll("'", '')}', var(--font-text), sans-serif`;
+	warning.push(`Police invalide : ${raw}`);
+	return presets[fallback] ?? fallback;
+}
+
+function cssWeight(value: unknown, fallback: string, warning: string[]): string {
+	const raw = text(value, fallback);
+	if (raw === 'normal' || raw === 'bold' || /^(?:[1-8]00|900)$/.test(raw)) return raw;
+	warning.push(`Graisse invalide : ${raw}`);
+	return fallback;
+}
+
+function cssStyle(value: unknown, fallback: string, warning: string[]): string {
+	const raw = text(value, fallback);
+	if (raw === 'normal' || raw === 'italic') return raw;
+	warning.push(`Style invalide : ${raw}`);
+	return fallback;
+}
+
+function cssAlign(value: unknown, fallback: string, warning: string[]): string {
+	const raw = text(value, fallback);
+	if (raw === 'left' || raw === 'center') return raw;
+	warning.push(`Alignement invalide : ${raw}`);
+	return fallback;
+}
+
+const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', description: 'Une citation locale qui change chaque jour.', category: 'Fun', icon: '', defaultCode: '```quote\nmode: daily\nlang: fr\nfont: elegant\nsize: large\nweight: normal\nstyle: italic\nalign: left\ntext-color: normal\nborder-color: accent\nbar-color: accent\nbackground: transparent\nauthor: true\nauthor-style: normal\nauthor-color: muted\n```', async render(source, el, ctx) {
 	const params = readParams(source);
 	const sourceName = text(params.source, 'builtin');
 	const language = text(params.lang, 'fr');
@@ -105,9 +155,30 @@ const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', descrip
 	if (!sources.includes(sourceName as typeof sources[number])) throw new Error('Source invalide : utilisez builtin, file ou inline.');
 	if (!modes.includes(mode as typeof modes[number])) throw new Error('Mode invalide : utilisez daily ou random.');
 	const root = base(el, params, ctx, 'widget-quote');
-	const mark = root.createDiv({ cls: 'widget-quote-mark', text: icon(params, '💬') });
-	const content = root.createDiv({ cls: 'widget-quote-content' });
-	const authorEnabled = parseBoolean(params.author, true);
+	const warning: string[] = [];
+	const settings = ctx.settings;
+	const authorEnabled = parseBoolean(params.author, settings.quoteAuthor);
+	const frame = root.createDiv({ cls: 'widget-quote-frame' });
+	const bar = frame.createDiv({ cls: 'widget-quote-bar', attr: { 'aria-hidden': 'true' } });
+	const content = frame.createDiv({ cls: 'widget-quote-content' });
+	const border = parseBoolean(params.border, settings.quoteBorder);
+	const barEnabled = parseBoolean(params.bar, settings.quoteBar);
+	root.style.setProperty('--quote-font', fontFamily(params.font, settings.quoteFont, warning));
+	root.style.setProperty('--quote-size', cssSize(params.size, settings.quoteSize, warning));
+	root.style.setProperty('--quote-weight', cssWeight(params.weight, settings.quoteWeight, warning));
+	root.style.setProperty('--quote-style', cssStyle(params.style, settings.quoteStyle, warning));
+	root.style.setProperty('--quote-align', cssAlign(params.align, settings.quoteAlign, warning));
+	root.style.setProperty('--quote-text-color', cssColor(params['text-color'], settings.quoteTextColor, warning));
+	root.style.setProperty('--quote-author-font', fontFamily(params['author-font'], settings.quoteAuthorFont, warning));
+	root.style.setProperty('--quote-author-size', cssSize(params['author-size'], settings.quoteAuthorSize, warning));
+	root.style.setProperty('--quote-author-weight', cssWeight(params['author-weight'], settings.quoteAuthorWeight, warning));
+	root.style.setProperty('--quote-author-style', cssStyle(params['author-style'], settings.quoteAuthorStyle, warning));
+	root.style.setProperty('--quote-author-color', cssColor(params['author-color'], settings.quoteAuthorColor, warning));
+	root.style.setProperty('--quote-border-color', cssColor(params['border-color'] ?? params.color, settings.quoteBorderColor, warning));
+	root.style.setProperty('--quote-bar-color', cssColor(params['bar-color'] ?? params.color, settings.quoteBarColor, warning));
+	root.style.setProperty('--quote-background', cssColor(params.background, settings.quoteBackground, warning));
+	root.style.setProperty('--quote-border-width', border ? '1px' : '0');
+	root.style.setProperty('--quote-bar-width', barEnabled ? '3px' : '0');
 	let randomQuote: QuoteItem | undefined;
 	let lastDate = localDateKey();
 
@@ -125,6 +196,7 @@ const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', descrip
 		content.empty();
 		content.createEl('blockquote', { text: item.text });
 		if (authorEnabled) content.createDiv({ cls: 'widget-quote-author', text: `— ${item.author || 'Anonyme'}` });
+		bar.toggleAttribute('hidden', !barEnabled);
 		lastDate = dateKey;
 	};
 	const safeRender = () => { void renderCurrent().catch((error: unknown) => content.setText(String(error))); };
@@ -136,7 +208,7 @@ const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', descrip
 	ctx.addWindowEvent?.('focus', checkDate);
 	ctx.addWindowEvent?.('visibilitychange', checkDate);
 	if (sourceName === 'file') ctx.addVaultModify?.((file) => { const path = file && typeof file === 'object' && 'path' in file ? String(file.path) : ''; if (path === text(params.file, 'Citations.md')) { randomQuote = undefined; safeRender(); } });
-	void mark;
+	if (warning.length) root.createDiv({ cls: 'widget-quote-warning', text: warning.join(' · ') });
 } };
 
 export default quote;
