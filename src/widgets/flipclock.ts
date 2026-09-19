@@ -3,25 +3,29 @@ import { base, readParams, text } from '../utils';
 
 interface FlipDigit {
 	root: HTMLElement;
-	value: HTMLElement;
+	top: HTMLElement;
+	bottom: HTMLElement;
 }
 
 function createDigit(parent: HTMLElement, initial: string): FlipDigit {
 	const root = parent.createDiv({ cls: 'widget-flip-digit' });
-	root.createDiv({ cls: 'widget-flip-top', text: initial });
-	const value = root.createDiv({ cls: 'widget-flip-bottom', text: initial });
-	return { root, value };
+	const top = root.createDiv({ cls: 'widget-flip-top', text: initial });
+	const bottom = root.createDiv({ cls: 'widget-flip-bottom', text: initial });
+	return { root, top, bottom };
 }
 
 function updateDigit(digit: FlipDigit, next: string): void {
-	if (digit.value.textContent === next) return;
+	if (digit.bottom.textContent === next) return;
 
-	const current = digit.value.textContent ?? next;
+	const current = digit.bottom.textContent ?? next;
 	const top = digit.root.createDiv({ cls: 'widget-flip-top widget-flip-top-flip', text: current });
 	const bottom = digit.root.createDiv({ cls: 'widget-flip-bottom widget-flip-bottom-flip', text: next });
-	digit.value.setText(next);
 	top.addEventListener('animationend', () => top.remove());
-	bottom.addEventListener('animationend', () => bottom.remove());
+	bottom.addEventListener('animationend', () => {
+		digit.top.setText(next);
+		digit.bottom.setText(next);
+		bottom.remove();
+	});
 }
 
 const flipclock: WidgetDefinition = { id: 'flipclock', name: 'Flip clock', description: 'Une horloge rétro animée.', category: 'Temps', icon: '▣', defaultCode: '```flipclock\ncolor: amber\nsize: large\n```', render(source, el, ctx) {
