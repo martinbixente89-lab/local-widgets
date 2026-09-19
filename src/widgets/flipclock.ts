@@ -8,7 +8,9 @@ interface FlipDigit {
 }
 
 function createFace(parent: HTMLElement, cls: string, value: string): HTMLElement {
-	return parent.createDiv({ cls, text: value });
+	const face = parent.createDiv({ cls });
+	face.createSpan({ text: value });
+	return face;
 }
 
 function createDigit(parent: HTMLElement, initial: string): FlipDigit {
@@ -25,22 +27,22 @@ function createSeparator(parent: HTMLElement): void {
 }
 
 function updateDigit(digit: FlipDigit, next: string, animated: boolean): void {
-	if (digit.bottom.textContent === next) return;
+	if (digit.bottom.textContent?.trim() === next) return;
 
-	const current = digit.bottom.textContent ?? next;
+	const current = digit.bottom.textContent?.trim() ?? next;
 	if (!animated) {
-		digit.top.setText(next);
-		digit.bottom.setText(next);
+		digit.top.firstElementChild?.setText(next);
+		digit.bottom.firstElementChild?.setText(next);
 		return;
 	}
 
 	const top = createFace(digit.root, 'widget-flip-top widget-flip-top-flip', current);
 	const bottom = createFace(digit.root, 'widget-flip-bottom widget-flip-bottom-flip', next);
-	top.addEventListener('animationstart', () => digit.top.setText(next));
+	top.addEventListener('animationstart', () => digit.top.firstElementChild?.setText(next));
 	top.addEventListener('animationend', () => top.remove());
 	bottom.addEventListener('animationend', () => {
-		digit.top.setText(next);
-		digit.bottom.setText(next);
+		digit.top.firstElementChild?.setText(next);
+		digit.bottom.firstElementChild?.setText(next);
 		bottom.remove();
 	});
 }
