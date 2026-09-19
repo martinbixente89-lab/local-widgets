@@ -6,6 +6,8 @@ export default defineConfig(
 	globalIgnores([
 		'node_modules',
 		'Exemple_flip_clock',
+		'tests',
+		'vitest.config.ts',
 		'dist',
 		'esbuild.config.mjs',
 		'version-bump.mjs',

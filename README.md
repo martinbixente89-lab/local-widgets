@@ -53,6 +53,12 @@ Paramètres : `source` (`builtin`, `file`, `inline`), `file`, `quotes`, `lang` (
 
 Pour une source personnelle, utilisez une citation par ligne dans `Citations.md`, au format `Texte — Auteur`. Pour une liste inline, utilisez `quotes:` avec des chaînes ou des objets `{ text, author, lang, category }`.
 
+### Paramètres graphiques
+
+Survolez un widget pour ouvrir son menu de paramètres. La modale relit toujours le bloc depuis le vault : le bloc est l’unique source de vérité. Chaque changement est écrit dans le bloc avec une opération atomique, sans réordonner ni supprimer les clés inconnues. Le bouton **Voir le code** place le curseur dans le bloc source.
+
+Les modifications manuelles du bloc sont relues tant que la modale est ouverte. Les champs actuellement saisis ne sont pas remplacés pendant leur focus. Les clés absentes utilisent leur valeur par défaut et le bouton **Par défaut** supprime la clé du YAML.
+
 ## Ajouter un widget
 
 Créez un fichier dans `src/widgets/` qui exporte un `WidgetDefinition`, puis importez-le et ajoutez-le au tableau `allWidgets` dans `src/widgets/index.ts`. Utilisez `readParams`, `base` et les variables CSS existantes pour conserver le comportement et le style communs. Les timers doivent passer par `ctx.addInterval` afin d’être nettoyés avec le bloc Markdown. Les rendus réseau peuvent être asynchrones et doivent utiliser `requestUrl`.
