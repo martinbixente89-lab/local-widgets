@@ -7,10 +7,16 @@ interface FlipDigit {
 	bottom: HTMLElement;
 }
 
+function createFace(parent: HTMLElement, cls: string, value: string): HTMLElement {
+	const face = parent.createDiv({ cls });
+	face.createSpan({ text: value });
+	return face;
+}
+
 function createDigit(parent: HTMLElement, initial: string): FlipDigit {
 	const root = parent.createDiv({ cls: 'widget-flip-digit' });
-	const top = root.createDiv({ cls: 'widget-flip-top', text: initial });
-	const bottom = root.createDiv({ cls: 'widget-flip-bottom', text: initial });
+	const top = createFace(root, 'widget-flip-top', initial);
+	const bottom = createFace(root, 'widget-flip-bottom', initial);
 	return { root, top, bottom };
 }
 
@@ -18,12 +24,12 @@ function updateDigit(digit: FlipDigit, next: string): void {
 	if (digit.bottom.textContent === next) return;
 
 	const current = digit.bottom.textContent ?? next;
-	const top = digit.root.createDiv({ cls: 'widget-flip-top widget-flip-top-flip', text: current });
-	const bottom = digit.root.createDiv({ cls: 'widget-flip-bottom widget-flip-bottom-flip', text: next });
+	const top = createFace(digit.root, 'widget-flip-top widget-flip-top-flip', current);
+	const bottom = createFace(digit.root, 'widget-flip-bottom widget-flip-bottom-flip', next);
 	top.addEventListener('animationend', () => top.remove());
 	bottom.addEventListener('animationend', () => {
-		digit.top.setText(next);
-		digit.bottom.setText(next);
+		digit.top.firstElementChild?.setText(next);
+		digit.bottom.firstElementChild?.setText(next);
 		bottom.remove();
 	});
 }
