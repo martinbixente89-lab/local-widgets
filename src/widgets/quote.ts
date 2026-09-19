@@ -158,16 +158,19 @@ const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', descrip
 	const warning: string[] = [];
 	const settings = ctx.settings;
 	const authorEnabled = parseBoolean(params.author, settings.quoteAuthor);
-	const frame = root.createDiv({ cls: 'widget-quote-frame' });
-	const bar = frame.createDiv({ cls: 'widget-quote-bar', attr: { 'aria-hidden': 'true' } });
-	const content = frame.createDiv({ cls: 'widget-quote-content' });
 	const border = parseBoolean(params.border, settings.quoteBorder);
 	const barEnabled = parseBoolean(params.bar, settings.quoteBar);
+	const quoteAlign = cssAlign(params.align, settings.quoteAlign, warning);
+	root.addClass('lw-quote');
+	root.toggleClass('is-centered', quoteAlign === 'center');
+	const frame = root.createDiv({ cls: 'lw-quote__frame' });
+	const bar = frame.createDiv({ cls: 'lw-quote__bar', attr: { 'aria-hidden': 'true' } });
+	const content = frame.createDiv({ cls: 'lw-quote__content' });
 	root.style.setProperty('--quote-font', fontFamily(params.font, settings.quoteFont, warning));
 	root.style.setProperty('--quote-size', cssSize(params.size, settings.quoteSize, warning));
 	root.style.setProperty('--quote-weight', cssWeight(params.weight, settings.quoteWeight, warning));
 	root.style.setProperty('--quote-style', cssStyle(params.style, settings.quoteStyle, warning));
-	root.style.setProperty('--quote-align', cssAlign(params.align, settings.quoteAlign, warning));
+	root.style.setProperty('--quote-align', quoteAlign);
 	root.style.setProperty('--quote-text-color', cssColor(params['text-color'], settings.quoteTextColor, warning));
 	root.style.setProperty('--quote-author-font', fontFamily(params['author-font'], settings.quoteAuthorFont, warning));
 	root.style.setProperty('--quote-author-size', cssSize(params['author-size'], settings.quoteAuthorSize, warning));
@@ -194,8 +197,8 @@ const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', descrip
 		const item = mode === 'daily' ? chooseDaily(quotes, dateKey) : randomQuote;
 		if (!item) throw new Error('Impossible de sélectionner une citation.');
 		content.empty();
-		content.createEl('blockquote', { text: item.text });
-		if (authorEnabled) content.createDiv({ cls: 'widget-quote-author', text: `— ${item.author || 'Anonyme'}` });
+		content.createDiv({ cls: 'lw-quote__text', text: item.text });
+		if (authorEnabled) content.createDiv({ cls: 'lw-quote__author', text: `— ${item.author || 'Anonyme'}` });
 		bar.toggleAttribute('hidden', !barEnabled);
 		lastDate = dateKey;
 	};
@@ -208,7 +211,7 @@ const quote: WidgetDefinition = { id: 'quote', name: 'Citation du jour', descrip
 	ctx.addWindowEvent?.('focus', checkDate);
 	ctx.addWindowEvent?.('visibilitychange', checkDate);
 	if (sourceName === 'file') ctx.addVaultModify?.((file) => { const path = file && typeof file === 'object' && 'path' in file ? String(file.path) : ''; if (path === text(params.file, 'Citations.md')) { randomQuote = undefined; safeRender(); } });
-	if (warning.length) root.createDiv({ cls: 'widget-quote-warning', text: warning.join(' · ') });
+	if (warning.length) root.createDiv({ cls: 'lw-quote-warning', text: warning.join(' · ') });
 } };
 
 export default quote;
