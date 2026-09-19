@@ -1,0 +1,6 @@
+// Change the Lo-Fi YouTube embed here — this is the only place it needs to change.
+// `code` is the YouTube video ID (the part after "v=" or "embed/" in the URL).
+const LOFI = {
+    name: "Ampi",
+    code: "fK2dpL1GdDE",
+};
